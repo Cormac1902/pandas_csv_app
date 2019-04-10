@@ -1,18 +1,10 @@
-<!DOCTYPE html>
-{% load static %}
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>CSV Upload</title>
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet"
-          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
-</head>
-<body>
-<h2><label for="csv-upload">Upload a JSON file</label></h2>
-<form name="csv-form" method="post" enctype="multipart/form-data">
-    <input id="csv-upload" class="btn btn-outline-primary" type="file" name="csv-file" accept=".csv"/>
+{% extends "main.html" %}
+{% block title %}CSV Upload{% endblock %}
+{% block body %}
+<form name="csv-form" action="/validateCSV" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <h2><label for="csv-upload">Upload a CSV file</label></h2>
+    <input id="csv-upload" class="btn btn-outline-primary" type="file" name="file" accept=".csv"/>
     <input class="btn btn-outline-primary" type="submit" name="submit" value="Submit"/>
 </form>
-</body>
-</html>
+{% endblock %}
