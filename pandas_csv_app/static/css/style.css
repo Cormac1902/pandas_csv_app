@@ -1,0 +1,10 @@
+#csv-upload {
+	border-color: inherit;
+	padding: 0;
+}
+
+#csv-upload:hover {
+	background-color: inherit;
+	color: inherit;
+	cursor: pointer;
+}
