@@ -12,5 +12,9 @@ def get_headers(csv_file):  # Obtain headers from CSV file
     return csv_file.columns.tolist()
 
 
+def get_data_types(csv_file):  # Obtain column data types
+    return csv_file.dtypes
+
+
 def count_records(csv_file):                 # Count records in file
     return len(csv_file)

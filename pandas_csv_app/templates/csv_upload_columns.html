@@ -8,13 +8,51 @@
     <input class="btn btn-outline-primary" type="submit" name="submit" value="Submit"/>
     <input class="btn btn-outline-primary" type="submit" name="submit" value="Load headers"/><br>
     <input type="checkbox" name="headers" checked>Check headers for uppercase letters<br>
-    <input type="checkbox" name="null_values" checked>Check for null values<br>
-    <input type="checkbox" name="special_characters" checked>Check for special characters<br>
 </form>
-
-<ul class="list-group">
-    {% for h in headers %}
-        <li class="list-group-item">{{ h }}</li>
-    {% endfor %}
-</ul>
+<form name="column-checks" action="/validateCSVColumns" method="post">
+    {% csrf_token %}
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th colspan="2">Column name</th>
+                    <th>Data type</th>
+                    <th style="text-align: center;">Check for null values</th>
+                    <th style="text-align: center;">Check for special characters</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for h, dict in headers_dict.items %}
+                <tr>
+                    <td colspan="2">{{ h }}</td>
+                    <!-- https://pbpython.com/pandas_dtypes.html -->
+                    <td>{% if dict.dtype == 'object' %}
+                            Object
+                        {% elif dict.dtype == 'int64' %}
+                            Integer
+                        {% elif dict.dtype == 'float64' %}
+                            Float
+                        {% elif dict.dtype == 'bool' %}
+                            Boolean
+                        {% elif dict.dtype == 'datetime64' %}
+                            Date/time
+                        {% elif dict.dtype == category %}
+                            Category
+                        {% else %}
+                            {{ dict.dtype }}
+                        {% endif %}
+                    </td>
+                    <td style="text-align: center;">{{ dict.form.null_values }}</td>
+                    <td style="text-align: center;">
+                        {% if dict.dtype != 'int64' %}
+                            {{ dict.form.special_characters }}
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <input class="btn btn-outline-primary" type="submit" name="submit" value="Validate CSV"/>
+</form>
 {% endblock %}

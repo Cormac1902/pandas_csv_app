@@ -85,7 +85,8 @@ def check_rows_by_column(csv_file, column_checks):
     global errors
     errors = {}
 
-    headers = get_headers(csv_file)
+    # headers = get_headers(csv_file)
+    headers = csv_file
 
     for row in csv_file.itertuples():
         for check in column_checks:
