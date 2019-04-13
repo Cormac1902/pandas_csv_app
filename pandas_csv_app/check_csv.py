@@ -2,7 +2,6 @@ import re
 import math
 from .load_csv import get_headers
 from .models import ColumnCheck
-from django.forms.models import model_to_dict
 
 errors = {}
 
@@ -61,6 +60,11 @@ def append_row_number_to_dict(row):  # Appends row number to dictionary
         errors[(row.Index + 2)] = []
 
 
+def check_chk(chk, row, headers, i):
+    append_row_number_to_dict(row)
+    errors[(row.Index + 2)].append(str(chk) + 'found in column ' + headers[i - 1])
+
+
 def check_rows(csv_file, checks):
     global errors
     errors = {}
@@ -75,25 +79,27 @@ def check_rows(csv_file, checks):
             for check in checks:
                 chk = globals()['check_' + check](value)
                 if not (chk is None or chk is False):
-                    append_row_number_to_dict(row)
-                    errors[(row.Index + 2)].append(str(chk) + 'found in column ' + headers[i - 1])
+                    check_chk(chk, row, headers, i)
 
     return errors
 
 
-def check_rows_by_column(csv_file, column_checks):
+def check_rows_by_column(csv_file):
     global errors
     errors = {}
-
-    # headers = get_headers(csv_file)
-    headers = csv_file
+    headers = get_headers(csv_file)
 
     for row in csv_file.itertuples():
-        for check in column_checks:
-            chk = check_against_array(row[headers.index(check.name) + 1], check.allowed_values)
-            if chk is not True:  # If check_against_array flags an invalid value
-                append_row_number_to_dict(row)
-                errors[(row.Index + 2)].append('Invalid value found in column ' + check.name + ': ' + str(chk))
+        for column_check in ColumnCheck.objects.all():
+            column_position = headers.index(column_check.name) + 1
+            if column_check.null_values:
+                chk = check_null_values(row[column_position])
+                if not (chk is None or chk is False):
+                    check_chk(chk, row, headers, column_position)
 
+            if column_check.special_characters:
+                chk = check_special_characters(row[column_position])
+                if not (chk is None or chk is False):
+                    check_chk(chk, row, headers, column_position)
 
-# def check
+    return errors

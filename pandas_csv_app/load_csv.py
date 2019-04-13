@@ -16,5 +16,20 @@ def get_data_types(csv_file):  # Obtain column data types
     return csv_file.dtypes
 
 
-def count_records(csv_file):                 # Count records in file
-    return len(csv_file)
+def count_records(csv_file, column=None):                 # Count records in file
+    if column is None:
+        return len(csv_file)
+    else:
+        return csv_file[column].count()
+
+
+def count_unique_values(column):
+    return column.nunique()
+
+
+def get_min(column):
+    return column.min()
+
+
+def get_max(column):
+    return column.max()

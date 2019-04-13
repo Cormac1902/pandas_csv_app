@@ -1,4 +1,5 @@
 {% extends "main.html" %}
+{% load humanize %}
 {% block title %}CSV Upload{% endblock %}
 {% block body %}
 <form name="csv-form" action="/validateCSV" method="post" enctype="multipart/form-data">
@@ -15,16 +16,19 @@
         <table class="table table-hover">
             <thead>
                 <tr>
-                    <th colspan="2">Column name</th>
+                    <th colspan="2"  style="text-align: left;">Column name</th>
                     <th>Data type</th>
-                    <th style="text-align: center;">Check for null values</th>
-                    <th style="text-align: center;">Check for special characters</th>
+                    <th>Records</th>
+                    <th>Unique Values</th>
+                    <th>Check for null values</th>
+                    <th>Check for special characters</th>
+                    <th colspan="2" >Allowed values</th>
                 </tr>
             </thead>
             <tbody>
             {% for h, dict in headers_dict.items %}
-                <tr>
-                    <td colspan="2">{{ h }}</td>
+                <tr{% if not h.islower %} class="table-danger" {% endif %}>
+                    <td colspan="2"  style="text-align: left;">{{ h }}</td>
                     <!-- https://pbpython.com/pandas_dtypes.html -->
                     <td>{% if dict.dtype == 'object' %}
                             Object
@@ -42,10 +46,22 @@
                             {{ dict.dtype }}
                         {% endif %}
                     </td>
-                    <td style="text-align: center;">{{ dict.form.null_values }}</td>
-                    <td style="text-align: center;">
+                    <td>{{ dict.records|intcomma }}</td>
+                    <td>{{ dict.unique_values|intcomma }}</td>
+                    <td>{{ dict.form.null_values }}</td>
+                    <td>
                         {% if dict.dtype != 'int64' %}
                             {{ dict.form.special_characters }}
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if dict.dtype == 'int64' or dict.dtype == 'float64' %}
+                            {{ dict.form.min_allowed }}
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if dict.dtype == 'int64' or dict.dtype == 'float64' %}
+                            {{ dict.form.max_allowed }}
                         {% endif %}
                     </td>
                 </tr>
