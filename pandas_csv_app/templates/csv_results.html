@@ -1,20 +1,28 @@
 {% extends "main.html" %}
-{% block title %}CSV Results{% endblock %}
+{% block title %}CSV Validation Results{% endblock %}
 {% block body %}
 {% load static %}
-<h2>CSV Results</h2>
+<h2>CSV Validation Results: {{ filename }}</h2>
+{% if not errors %}
+<p>No issues found with CSV file</p>
+{% else %}
+<p>Issues found in CSV file. {% if errors.headers or errors|length > 1 %} Each number in this table represents
+    the record's line number in the file. {% endif %} </p>
 <table class="table-responsive">
     {% for key, values in errors.items %}
     <tr>
         <td class="collapsible">{{key}}
             <table class="content table-responsive table-bordered">
-            {% for v in values %}
-                <tr><td>{{v}}</td></tr>
-            {% endfor %}
+                {% for v in values %}
+                <tr>
+                    <td>{{v}}</td>
+                </tr>
+                {% endfor %}
             </table>
         </td>
     </tr>
     {% endfor %}
 </table>
 <script src="{% static 'js/resultsscripts.js' %}"></script>
+{% endif %}
 {% endblock %}

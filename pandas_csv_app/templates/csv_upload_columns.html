@@ -1,74 +1,87 @@
 {% extends "main.html" %}
 {% load humanize %}
-{% block title %}CSV Upload{% endblock %}
+{% block title %}CSV Upload: Headers{% endblock %}
 {% block body %}
-<form name="csv-form" action="/validateCSV" method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    <h2><label for="csv-upload">Upload a CSV file</label></h2>
-    <input id="csv-upload" class="btn btn-outline-primary" type="file" name="file" accept=".csv"/>
-    <input class="btn btn-outline-primary" type="submit" name="submit" value="Submit"/>
-    <input class="btn btn-outline-primary" type="submit" name="submit" value="Load headers"/><br>
-    <input type="checkbox" name="headers" checked>Check headers for uppercase letters<br>
-</form>
+<h2>{{ filename }}</h2>
+{% if headers %}
+<p>Yellow shading in the "Header name" column indicates an uppercase value has been found.</p>
+{% endif %}
+{% if null_values %}
+<p>Red shading in the "Unique values" column indicates that null values have been found.</p>
+{% endif %}
 <form name="column-checks" action="/validateCSVColumns" method="post">
     {% csrf_token %}
+    <input type="checkbox" name="headers" checked>Check headers for uppercase letters<br>
     <div class="table-responsive">
         <table class="table table-hover">
             <thead>
-                <tr>
-                    <th colspan="2"  style="text-align: left;">Column name</th>
-                    <th>Data type</th>
-                    <th>Records</th>
-                    <th>Unique Values</th>
-                    <th>Check for null values</th>
-                    <th>Check for special characters</th>
-                    <th colspan="2" >Allowed values</th>
-                </tr>
+            <tr>
+                <th colspan="2" style="text-align: left;">Header name</th>
+                <th>Data type</th>
+                <th>Records</th>
+                <th>Unique Values</th>
+                <th>Check for null values</th>
+                <th>Check for special characters</th>
+                <th colspan="2">Allowed values</th>
+            </tr>
             </thead>
             <tbody>
             {% for h, dict in headers_dict.items %}
-                <tr{% if not h.islower %} class="table-danger" {% endif %}>
-                    <td colspan="2"  style="text-align: left;">{{ h }}</td>
-                    <!-- https://pbpython.com/pandas_dtypes.html -->
-                    <td>{% if dict.dtype == 'object' %}
-                            Object
-                        {% elif dict.dtype == 'int64' %}
-                            Integer
-                        {% elif dict.dtype == 'float64' %}
-                            Float
-                        {% elif dict.dtype == 'bool' %}
-                            Boolean
-                        {% elif dict.dtype == 'datetime64' %}
-                            Date/time
-                        {% elif dict.dtype == category %}
-                            Category
-                        {% else %}
-                            {{ dict.dtype }}
-                        {% endif %}
-                    </td>
-                    <td>{{ dict.records|intcomma }}</td>
-                    <td>{{ dict.unique_values|intcomma }}</td>
-                    <td>{{ dict.form.null_values }}</td>
-                    <td>
-                        {% if dict.dtype != 'int64' %}
-                            {{ dict.form.special_characters }}
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if dict.dtype == 'int64' or dict.dtype == 'float64' %}
-                            {{ dict.form.min_allowed }}
-                        {% endif %}
-                    </td>
-                    <td>
-                        {% if dict.dtype == 'int64' or dict.dtype == 'float64' %}
-                            {{ dict.form.max_allowed }}
-                        {% endif %}
-                    </td>
-                </tr>
+            <tr>
+                <td {% if headers and not h.islower %} class="table-warning" {% endif %} colspan="2"
+                    style="text-align: left;">{{ h }}
+                </td>
+                <!-- https://pbpython.com/pandas_dtypes.html -->
+                <td>{% if dict.dtype == 'object' %}
+                        Object
+                    {% elif dict.dtype == 'int64' %}
+                        Integer
+                    {% elif dict.dtype == 'float64' %}
+                        Float
+                    {% elif dict.dtype == 'bool' %}
+                        Boolean
+                    {% elif dict.dtype == 'datetime64' %}
+                        Date/time
+                    {% elif dict.dtype == category %}
+                        Category
+                    {% else %}
+                        {{ dict.dtype }}
+                    {% endif %}
+                </td>
+                <td {% if null_values and dict.records != records %} class="table-danger" {% endif %}>
+                    {{ dict.records|intcomma }}
+                </td>
+                <td>{{ dict.unique_values|intcomma }}</td>
+                <td>{% if dict.dtype == 'object' or dict.dtype == 'float64' %}
+                        {{ dict.form.null_values }}
+                    {% endif %}
+                </td>
+                <td>
+                    {% if dict.dtype == 'object' %}
+                        {{ dict.form.special_characters }}
+                    {% endif %}
+                </td>
+                <td>
+                    {% if dict.dtype == 'int64' or dict.dtype == 'float64' %}
+                        {{ dict.form.min_allowed }}
+                    {% elif dict.dtype == 'datetime64' %}
+                        {{ dict.form.min_date_allowed }}
+                    {% endif %}
+                </td>
+                <td>
+                    {% if dict.dtype == 'int64' or dict.dtype == 'float64' %}
+                        {{ dict.form.max_allowed }}
+                    {% elif dict.dtype == 'datetime64' %}
+                        {{ dict.form.max_date_allowed }}
+                    {% endif %}
+                </td>
+            </tr>
             {% endfor %}
             </tbody>
         </table>
     </div>
-    <input class="btn btn-outline-primary" type="submit" name="submit" value="Validate CSV"/>
+    <div class="text-center">
+        <input class="btn btn-outline-primary" type="submit" name="submit" value="Validate CSV"/>
+    </div>
 </form>
 {% endblock %}

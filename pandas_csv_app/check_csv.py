@@ -26,10 +26,20 @@ def check_null_values_orig(array):  # Check all values are present and that no r
         return True
 
 
+def check_min_allowed(value, min_allowed):
+    if value < min_allowed:
+        return 'Value ' + f'{value:g}' + ', lower than minimum allowed value ' + f'{min_allowed:g}' + ','
+
+
+def check_max_allowed(value, max_allowed):
+    if value > max_allowed:
+        return 'Value ' + f'{value:g}' + ', higher than maximum allowed value ' + f'{max_allowed:g}' + ','
+
+
 def check_null_values(value):  # Check all values are present and that no rows are too long (for tuples)
     if isinstance(value, float):  # Only floats can be NaN
         if math.isnan(value):  # Return true if any null values are found
-            return 'Null value '
+            return 'Null value'
         else:
             return False
 
@@ -38,7 +48,7 @@ def check_characters_against_regex(value, regex_string):  # Check for special ch
     if isinstance(value, str):  # Don't see need to check non-string values as they won't contain special values
         for letter in value:
             if re.search(regex_string, letter) is None:
-                return 'Special character '
+                return 'Special character'
         else:
             return False
 
@@ -60,9 +70,13 @@ def append_row_number_to_dict(row):  # Appends row number to dictionary
         errors[(row.Index + 2)] = []
 
 
-def check_chk(chk, row, headers, i):
-    append_row_number_to_dict(row)
-    errors[(row.Index + 2)].append(str(chk) + 'found in column ' + headers[i - 1])
+def check_chk(chk, row, column_name):
+    if not (chk is None or chk is False):
+        append_row_number_to_dict(row)
+        errors[(row.Index + 2)].append(str(chk) + ' found in column ' + column_name)
+        return True
+
+    return chk
 
 
 def check_rows(csv_file, checks):
@@ -77,29 +91,35 @@ def check_rows(csv_file, checks):
     for row in csv_file.itertuples():  # Iterate over rows as named tuples
         for i, value in enumerate(row):  # enumerate for printing out header later
             for check in checks:
-                chk = globals()['check_' + check](value)
-                if not (chk is None or chk is False):
-                    check_chk(chk, row, headers, i)
+                check_chk(globals()['check_' + check](value), row, headers[i - 1])
 
     return errors
 
 
-def check_rows_by_column(csv_file):
+def check_rows_by_column(csv_file, check_headers):
     global errors
     errors = {}
     headers = get_headers(csv_file)
+
+    if check_headers is True:
+        check_upper_headers(headers)
 
     for row in csv_file.itertuples():
         for column_check in ColumnCheck.objects.all():
             column_position = headers.index(column_check.name) + 1
             if column_check.null_values:
-                chk = check_null_values(row[column_position])
-                if not (chk is None or chk is False):
-                    check_chk(chk, row, headers, column_position)
-
+                check_chk(check_null_values(row[column_position]), row, column_check.name)
             if column_check.special_characters:
-                chk = check_special_characters(row[column_position])
-                if not (chk is None or chk is False):
-                    check_chk(chk, row, headers, column_position)
+                check_chk(check_special_characters(row[column_position]), row, column_check.name)
+            if column_check.min_allowed is not None:
+                check_chk(check_min_allowed(row[column_position], column_check.min_allowed), row, column_check.name)
+            if column_check.max_allowed is not None:
+                check_chk(check_max_allowed(row[column_position], column_check.max_allowed), row, column_check.name)
+            if column_check.min_date_allowed is not None:
+                check_chk(check_min_allowed(row[column_position], column_check.min_date_allowed), row,
+                          column_check.name)
+            if column_check.max_date_allowed is not None:
+                check_chk(check_min_allowed(row[column_position], column_check.max_date_allowed), row,
+                          column_check.name)
 
     return errors

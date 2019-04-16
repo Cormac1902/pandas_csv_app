@@ -9,6 +9,11 @@
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
-{% block body %}{% endblock %}
+<div class="navbar navbar-dark bg-dark">
+    <a class="navbar-brand" href="./">CSV Validator</a>
+</div>
+<main class="container">
+    {% block body %}{% endblock %}
+</main>
 </body>
 </html>

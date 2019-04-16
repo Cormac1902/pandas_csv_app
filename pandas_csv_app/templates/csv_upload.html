@@ -1,20 +1,17 @@
 {% extends "main.html" %}
 {% block title %}CSV Upload{% endblock %}
 {% block body %}
+<h2>Upload a CSV file</h2>
+<p>This application will take a CSV file and validate its data. Upload a CSV file and select which rules to check it
+    against. To see headers and decide on an individual header-by-header basis, select "Load headers". To simply check
+    the entirety of the CSV file, select "Submit".</p>
 <form name="csv-form" action="/validateCSV" method="post" enctype="multipart/form-data">
     {% csrf_token %}
-    <h2><label for="csv-upload">Upload a CSV file</label></h2>
-    <input id="csv-upload" class="btn btn-outline-primary" type="file" name="file" accept=".csv"/>
+    <input id="csv-upload" class="btn btn-outline-primary" type="file" name="file" accept=".csv" required/><br>
+    <input type="checkbox" name="headers" checked> Check headers for uppercase letters<br>
+    <input type="checkbox" name="null_values" checked> Check for null values<br>
+    <input type="checkbox" name="special_characters" checked> Check for special characters<br>
     <input class="btn btn-outline-primary" type="submit" name="submit" value="Submit"/>
-    <input class="btn btn-outline-primary" type="submit" name="submit" value="Load headers"/><br>
-    <input type="checkbox" name="headers" checked>Check headers for uppercase letters<br>
-    <input type="checkbox" name="null_values" checked>Check for null values<br>
-    <input type="checkbox" name="special_characters" checked>Check for special characters<br>
+    <input class="btn btn-outline-primary" type="submit" name="submit" value="Load headers"/>
 </form>
-
-<ul class="list-group">
-    {% for h in headers %}
-        <li class="list-group-item">{{ h }}</li>
-    {% endfor %}
-</ul>
 {% endblock %}

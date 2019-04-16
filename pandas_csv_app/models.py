@@ -12,3 +12,7 @@ class ColumnCheck(models.Model):
     max = models.FloatField(null=True, blank=True, default=None)
     min_allowed = models.FloatField(null=True, blank=True, default=None)
     max_allowed = models.FloatField(null=True, blank=True, default=None)
+    min_date = models.DateField(null=True, blank=True, default=None)
+    max_date = models.DateField(null=True, blank=True, default=None)
+    min_allowed_date = models.DateField(null=True, blank=True, default=None)
+    max_allowed_date = models.DateField(null=True, blank=True, default=None)

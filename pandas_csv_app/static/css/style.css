@@ -1,10 +1,14 @@
-body {
-	padding: 2.5vw;
-}
-
 #csv-upload {
 	border-color: transparent;
 	padding: 0;
+}
+
+input[type="submit"] {
+    margin: 2.5vh 0;
+}
+
+input[name="headers"], table {
+    margin-top: 2.5vh;
 }
 
 #csv-upload:hover {
@@ -12,7 +16,6 @@ body {
 	color: #007bff;
 	cursor: pointer;
 }
-
 
 
 .collapsible {
@@ -37,7 +40,7 @@ body {
 	overflow: hidden;
 	background-color: #f1f1f1;
 	text-align: left;
-	margin-top: 1vw;
+	margin-top: 1vh;
 }
 
 .table {
