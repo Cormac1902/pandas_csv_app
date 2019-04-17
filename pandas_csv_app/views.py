@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from .check_csv import check_rows, check_rows_by_column, update_regex
-from .load_csv import read_csv_file, get_headers, get_data_types, count_records, count_unique_values, get_max, get_min, \
-    get_unique_values
+from .load_csv import read_csv_file, get_headers, get_data_types, count_records, count_unique_values, get_max, \
+    get_min, get_unique_values
 from .models import ColumnCheck
 from .forms import ColumnCheckForm
 
@@ -25,7 +25,7 @@ def check_csv(request):
 
         filename = request.FILES['file'].name
 
-        if 'regex' in request.POST:
+        if request.POST['regex']:
             update_regex(request.POST['regex'])
 
         if request.POST['submit'] == 'Load headers':

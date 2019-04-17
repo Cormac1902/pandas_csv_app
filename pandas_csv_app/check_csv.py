@@ -4,7 +4,7 @@ from .load_csv import get_headers
 from .models import ColumnCheck
 
 errors = {}
-regex = '[a-zA-ZÀ-ÿ0-9-_<>=]'
+regex = '(?![a-zA-ZÀ-ÿ0-9-_<>=]).'
 
 
 def update_regex(regex_string):
@@ -53,7 +53,7 @@ def check_null_values(value):  # Check all values are present and that no rows a
 def check_characters_against_regex(value, regex_string):  # Check for special characters
     if isinstance(value, str):  # Don't see need to check non-string values as they won't contain special values
         for letter in value:
-            if re.search(regex_string, letter) is None:
+            if re.search(regex_string, letter) is not None:
                 return 'Special character'
         else:
             return False
@@ -106,7 +106,6 @@ def check_rows(csv_file, checks):
 def check_rows_by_column(csv_file, check_headers):
     global errors
     errors = {}
-    print(errors)
     headers = get_headers(csv_file)
 
     if check_headers is True:
