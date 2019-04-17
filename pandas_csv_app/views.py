@@ -27,6 +27,8 @@ def check_csv(request):
 
         if request.POST['regex']:
             update_regex(request.POST['regex'])
+        else:
+            update_regex('(?![a-zA-ZÀ-ÿ0-9-_<>=]).')
 
         if request.POST['submit'] == 'Load headers':
 
@@ -99,7 +101,7 @@ def check_csv_columns(request):
                     ColumnCheck.objects.create(name=header)
 
             for column_check in ColumnCheck.objects.all():
-                if headers_dict[column_check.name]['dtype'] == 'int64'\
+                if headers_dict[column_check.name]['dtype'] == 'int64' \
                         or headers_dict[column_check.name]['dtype'] == 'float64':
                     column = csv_file[column_check.name]
                     column_check.min = get_min(column)
@@ -119,7 +121,11 @@ def check_csv_columns(request):
 
                 for min_max in min_max_list:
                     if min_max in request.POST:
-                        setattr(column_check, min_max, float(request.POST[min_max]) if request.POST[min_max] else False)
+                        setattr(column_check, min_max.split(column_check.name + '-')[1],
+                                float(request.POST[min_max]) if request.POST[min_max] else None)
+
+                if column_check.name + '-allowed_values' in request.POST:
+                    column_check.allowed_values = request.POST.getlist(column_check.name + '-allowed_values')
 
                 column_check.save()
 

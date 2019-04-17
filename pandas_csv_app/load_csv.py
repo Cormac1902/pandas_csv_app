@@ -9,7 +9,8 @@ def read_csv_file(csv_file, missing_values):
         if missing_values:
             return read_csv(csv_file, na_values=missing_values)
         else:
-            return read_csv(csv_file, na_values=["N/A", "N/a", "n/A", "n/a", "Na", "nA","na", "---", "--", "-", " ", "?"])
+            return read_csv(csv_file,
+                            na_values=["N/A", "N/a", "n/A", "n/a", "Na", "nA", "na", "---", "--", "-", " ", "?"])
     except EmptyDataError:
         return False
 
@@ -22,7 +23,7 @@ def get_data_types(csv_file):  # Obtain column data types
     return csv_file.dtypes
 
 
-def count_records(csv_file, column=None):                 # Count records in file
+def count_records(csv_file, column=None):  # Count records in file
     if column is None:
         return len(csv_file)
     else:
