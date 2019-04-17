@@ -46,3 +46,7 @@ input[name="headers"], table {
 .table {
     text-align: center;
 }
+
+.col-check {
+    padding: .375rem 15px;
+}

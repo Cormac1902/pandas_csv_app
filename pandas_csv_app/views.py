@@ -1,23 +1,32 @@
 from django.shortcuts import render, redirect
-from .check_csv import check_rows, check_rows_by_column
-from .load_csv import read_csv_file, get_headers, get_data_types, count_records, count_unique_values, get_max, get_min
+from .check_csv import check_rows, check_rows_by_column, update_regex
+from .load_csv import read_csv_file, get_headers, get_data_types, count_records, count_unique_values, get_max, get_min, \
+    get_unique_values
 from .models import ColumnCheck
 from .forms import ColumnCheckForm
-from datetime import datetime
 
 csv_file, headers_dict, filename = None, None, None
 
 
 # Create your views here.
-def csv_upload(request):
-    return render(request, 'csv_upload.html', {})
+def csv_upload(request, error=None):
+    return render(request, 'csv_upload.html',
+                  {'missing_values': ["N/A", "N/a", "n/A", "n/a", "Na", "nA", "na", "---", "--", "-", "?", " "],
+                   'error': error})
 
 
 def check_csv(request):
     if request.method == 'POST':
         global csv_file, filename
-        csv_file = read_csv_file(request.FILES['file'])
+        csv_file = read_csv_file(request.FILES['file'], request.POST.getlist('missing-values'))
+
+        if csv_file is False:
+            return csv_upload(request, 'CSV file was blank')
+
         filename = request.FILES['file'].name
+
+        if 'regex' in request.POST:
+            update_regex(request.POST['regex'])
 
         if request.POST['submit'] == 'Load headers':
 
@@ -36,6 +45,7 @@ def check_csv(request):
             for header in headers_dict:
                 dtype = str(headers_dict[header])
                 column = csv_file[header]
+
                 headers_dict[header] = {'dtype': dtype,
                                         'records': count_records(csv_file, header),
                                         'unique_values': count_unique_values(column),
@@ -48,6 +58,11 @@ def check_csv(request):
                 elif dtype == 'datetime64':
                     headers_dict[header].update(
                         {'form': ColumnCheckForm(prefix=header, min_date_allowed=True, max_date_allowed=True)})
+                elif dtype == 'object':
+                    unique_values = get_unique_values(csv_file[header].dropna())
+                    headers_dict[header].update(
+                        {'form': ColumnCheckForm(prefix=header,
+                                                 allowed_values=unique_values)})
 
                 ColumnCheck.objects.all().delete()
 
@@ -58,7 +73,7 @@ def check_csv(request):
             checks = []
 
             for check in request.POST:
-                if not (check == 'csrfmiddlewaretoken' or check == 'submit'):
+                if not (check == 'csrfmiddlewaretoken' or check == 'submit' or check == 'regex'):
                     checks.append(check)
 
             errors = check_rows(csv_file, checks)
@@ -72,45 +87,44 @@ def check_csv_columns(request):
     if request.method == 'POST':
         global csv_file, headers_dict
 
-        headers = False
-        if 'headers' in request.POST:
-            headers = True
+        if headers_dict:
+            headers = False
+            if 'headers' in request.POST:
+                headers = True
 
-        for check in request.POST:
-            if not (check == 'csrfmiddlewaretoken' or check == 'submit' or check == 'headers'):
-                name = check.split('-')[0]
+            for header in headers_dict:
                 try:
-                    column_check = ColumnCheck.objects.get(name=name)
+                    ColumnCheck.objects.get(name=header)
                 except ColumnCheck.DoesNotExist:
-                    column_check = ColumnCheck.objects.create(name=name)
+                    ColumnCheck.objects.create(name=header)
 
-                if headers_dict[name]['dtype'] == 'int64' or headers_dict[name]['dtype'] == 'float64':
-                    column = csv_file[name]
+            for column_check in ColumnCheck.objects.all():
+                if headers_dict[column_check.name]['dtype'] == 'int64'\
+                        or headers_dict[column_check.name]['dtype'] == 'float64':
+                    column = csv_file[column_check.name]
                     column_check.min = get_min(column)
                     column_check.max = get_max(column)
-                elif headers_dict[name]['dtype'] == 'datetime64':
-                    column = csv_file[name]
+                elif headers_dict[column_check.name]['dtype'] == 'datetime64':
+                    column = csv_file[column_check.name]
                     column_check.min_date = get_min(column)
                     column_check.max_date = get_max(column)
 
-                if check.split('-')[1] == 'null_values':
-                    column_check.null_values = True
-                elif check.split('-')[1] == 'special_characters':
-                    column_check.special_characters = True
-                elif request.POST[check] is not '':
-                    if check.split('-')[1] == 'min_allowed':
-                        column_check.min_allowed = float(request.POST[check])
-                    elif check.split('-')[1] == 'max_allowed':
-                        column_check.max_allowed = float(request.POST[check])
-                    elif check.split('-')[1] == 'min_date_allowed':
-                        column_check.min_date_allowed = datetime.strptime(request.POST[check])
-                    elif check.split('-')[1] == 'max_date_allowed':
-                        column_check.max_date_allowed = datetime.strptime(request.POST[check])
+                column_check.null_values = True if column_check.name + '-null_values' in request.POST \
+                    else False
+                column_check.special_characters = True if column_check.name + '-special_characters' in request.POST \
+                    else False
+
+                min_max_list = [column_check.name + '-min_allowed', column_check.name + '-max_allowed',
+                                column_check.name + '-min_allowed_date', column_check.name + '-max_allowed_date', ]
+
+                for min_max in min_max_list:
+                    if min_max in request.POST:
+                        setattr(column_check, min_max, float(request.POST[min_max]) if request.POST[min_max] else False)
 
                 column_check.save()
 
-        errors = check_rows_by_column(csv_file, headers)
+            errors = check_rows_by_column(csv_file, headers)
 
-        return render(request, 'csv_results.html', {'errors': errors, 'filename': filename})
+            return render(request, 'csv_results.html', {'errors': errors, 'filename': filename})
 
     return redirect(csv_upload)

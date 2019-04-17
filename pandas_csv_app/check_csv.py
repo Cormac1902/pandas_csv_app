@@ -4,6 +4,12 @@ from .load_csv import get_headers
 from .models import ColumnCheck
 
 errors = {}
+regex = '[a-zA-ZÀ-ÿ0-9-_<>=]'
+
+
+def update_regex(regex_string):
+    global regex
+    regex = regex_string
 
 
 def check_upper_headers(array):  # Check if any letter is upper case and print
@@ -54,14 +60,15 @@ def check_characters_against_regex(value, regex_string):  # Check for special ch
 
 
 def check_special_characters(value):
-    return check_characters_against_regex(value, '[a-zA-ZÀ-ÿ0-9-_<>=]')
+    return check_characters_against_regex(value, regex)
 
 
 def check_against_array(value, array):  # Check if value exists in array
-    if value in array:
-        return True
-    else:
-        return value
+    if not check_null_values(value):
+        if value in array:
+            return False
+        else:
+            return 'Value ' + value + ', which is not in the allowed values,'
 
 
 def append_row_number_to_dict(row):  # Appends row number to dictionary
@@ -80,7 +87,7 @@ def check_chk(chk, row, column_name):
 
 
 def check_rows(csv_file, checks):
-    global errors
+    global errors, regex
     errors = {}
     headers = get_headers(csv_file)
 
@@ -99,6 +106,7 @@ def check_rows(csv_file, checks):
 def check_rows_by_column(csv_file, check_headers):
     global errors
     errors = {}
+    print(errors)
     headers = get_headers(csv_file)
 
     if check_headers is True:
@@ -115,11 +123,14 @@ def check_rows_by_column(csv_file, check_headers):
                 check_chk(check_min_allowed(row[column_position], column_check.min_allowed), row, column_check.name)
             if column_check.max_allowed is not None:
                 check_chk(check_max_allowed(row[column_position], column_check.max_allowed), row, column_check.name)
-            if column_check.min_date_allowed is not None:
+            if column_check.min_allowed_date is not None:
                 check_chk(check_min_allowed(row[column_position], column_check.min_date_allowed), row,
                           column_check.name)
-            if column_check.max_date_allowed is not None:
+            if column_check.max_allowed_date is not None:
                 check_chk(check_min_allowed(row[column_position], column_check.max_date_allowed), row,
+                          column_check.name)
+            if column_check.allowed_values:
+                check_chk(check_against_array(row[column_position], column_check.allowed_values), row,
                           column_check.name)
 
     return errors

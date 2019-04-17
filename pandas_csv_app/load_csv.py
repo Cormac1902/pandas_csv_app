@@ -1,11 +1,17 @@
 from pandas import read_csv
+from pandas.io.common import EmptyDataError
+
 
 # https://towardsdatascience.com/data-cleaning-with-python-and-pandas-detecting-missing-values-3e9c6ebcf78b
-missing_values = ["N/A", "N/a", "n/A", "n/a", "Na", "nA","na", "---", "--", "-", " ", "?"]
-
-
-def read_csv_file(csv_file):  # Read CSV file
-    return read_csv(csv_file, na_values=missing_values)
+# Read CSV file
+def read_csv_file(csv_file, missing_values):
+    try:
+        if missing_values:
+            return read_csv(csv_file, na_values=missing_values)
+        else:
+            return read_csv(csv_file, na_values=["N/A", "N/a", "n/A", "n/a", "Na", "nA","na", "---", "--", "-", " ", "?"])
+    except EmptyDataError:
+        return False
 
 
 def get_headers(csv_file):  # Obtain headers from CSV file
@@ -25,6 +31,10 @@ def count_records(csv_file, column=None):                 # Count records in fil
 
 def count_unique_values(column):
     return column.nunique()
+
+
+def get_unique_values(column):
+    return sorted(column.unique())
 
 
 def get_min(column):

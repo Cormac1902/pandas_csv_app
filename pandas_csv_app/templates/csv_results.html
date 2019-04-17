@@ -8,21 +8,23 @@
 {% else %}
 <p>Issues found in CSV file. {% if errors.headers or errors|length > 1 %} Each number in this table represents
     the record's line number in the file. {% endif %} </p>
-<table class="table-responsive">
-    {% for key, values in errors.items %}
-    <tr>
-        <td class="collapsible">{{key}}
-            <table class="content table-responsive table-bordered">
-                {% for v in values %}
-                <tr>
-                    <td>{{v}}</td>
-                </tr>
-                {% endfor %}
-            </table>
-        </td>
-    </tr>
-    {% endfor %}
-</table>
+<div class="table-responsive">
+    <table class="table">
+        {% for key, values in errors.items %}
+        <tr>
+            <td class="collapsible">{{key}}
+                <table class="content table-responsive table-bordered">
+                    {% for v in values %}
+                    <tr>
+                        <td>{{v}}</td>
+                    </tr>
+                    {% endfor %}
+                </table>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
 <script src="{% static 'js/resultsscripts.js' %}"></script>
 {% endif %}
 {% endblock %}
